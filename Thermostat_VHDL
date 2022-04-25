@@ -1,0 +1,65 @@
+Name     Thermostat;
+PartNo   00 ;
+Date     4/15/2022 ;
+Revision 01 ;
+Designer Akshaya Shivprasad ;
+Company  Penn State EE ;
+Assembly None ;
+Location  ;
+Device   v750c ;
+
+/* *************** INPUT PINS *********************/
+PIN   1  = CLK;  /*CLOCK INPUT*/ 
+PIN   2  = !B; /*BATTERY SENSOR*/ 
+PIN   3  = !C; /*COOLING SENSOR*/ 
+PIN   4  = !H; /*HEATING SENSOR*/ 
+PIN   5  = !RES; /*RESET SIGNAL*/
+
+/* *************** OUTPUT PINS *********************/
+PIN   23  = Y3; /*Y3 OUTPUT*/ 
+PIN   22  = Y; /*Y OUTPUT*/
+PIN   21  = G; /*G OUTPUT*/
+PIN   20  = R; /*R OUTPUT*/
+PIN   19  = QA;
+PIN   18 = QB;
+
+
+/*define states*/
+FIELD state_n = [QA, QB];
+$define S0 'b'00
+$define S1 'b'01
+$define S2 'b'10
+$define S3 'b'11
+
+/*D FLIP-FLOP CONTROL SIGNALS*/
+[QA,QB].OE = 'b'1;
+[QA,QB].SP = 'b'0;
+[QA,QB].AR = RES;
+[QA,QB].CK = CLK;
+
+/*GENERATE THERMOSTAT CONTROL SIGNALS*/
+Y3 = !QA & !QB;
+Y = QA & QB;
+G = QA & !QB;
+R = !QA & QB;
+
+/*IMLEMENT FSM*/
+
+SEQUENCED state_n{
+PRESENT S0
+		IF !B NEXT S3;
+		IF B & !C & H NEXT S1;
+		IF B & C & !H NEXT S2;
+PRESENT S1
+		IF !B NEXT S3;
+		IF B & H NEXT S1;
+		IF B & !C & !H NEXT S0;
+		IF B & C & !H NEXT S2;
+PRESENT S2
+		IF !B NEXT S3;
+		IF B & C NEXT S2;
+		IF B & !C & !H NEXT S0;
+		IF B & !C & H NEXT S1;
+PRESENT S3
+		IF B NEXT S0;
+}
